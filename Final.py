@@ -1,6 +1,8 @@
 """
 Author: Buyanbat Tamir
 Date: 4/29/30
+Data: Volcanoes
+URL: https://share.streamlit.io/bunga-alt/final-project/main/Final.py
 Description: 2 queries and a map using the volcanoes database
 
 """
@@ -11,6 +13,7 @@ import streamlit as st
 import pydeck as pdk
 import plotly.express as px
 
+#used by the pd.apply to change data in a dataframe
 def eruption(x):
     if 'BCE' in x:
         x = x.strip('BCE')
@@ -23,27 +26,60 @@ def eruption(x):
     return x
 
 
-def histogram(df):
-    st.title('Histogram Chart')
+def bar_chart(df):
+    st.title('Bar Chart of the frequency of volcanoes in a country')
+
+    #Creating a frequency dictionary
+    freq = {}
+    countries = list(df['Country'])
+    for x in countries:
+        if x in freq:
+            freq[x] += 1
+        else:
+            freq[x] = 1
+
+    #sorting the dictionary by descending order
+    sorted_dict = {}
+    sorted_keys = sorted(freq, key=freq.get, reverse=True)
+    for w in sorted_keys:
+        sorted_dict[w] = freq[w]
+
+    st.sidebar.header("Inputs for the Bar Chart")
+    xmin = st.sidebar.selectbox('Select minimum amount of volcanoes', np.arange(0, 101,5))
+
+    #creating a new dict with amounts higher than the user input
+    new_dict = {}
+    for w in sorted_dict:
+        if sorted_dict[w] > xmin:
+            new_dict[w] = sorted_dict[w]
+
+    x = new_dict.keys()
+    y = new_dict.values()
+
+    fig = px.bar(x=x, y=y, color=y)
+    st.plotly_chart(fig)
+
+
+def histogram(df, op = 0.8):
+    st.title('Histogram Chart of the Last Known Eruptions')
     min_value = int(df['Last Known Eruption'].min())
     max_value = int(df['Last Known Eruption'].max())
-    st.sidebar.header('Inputs for the Histogram')
-    bin_input = st.sidebar.number_input('How many bins for the histogram', 1, 500)
 
+    st.sidebar.header('Inputs for the Histogram')
+    bin_input = st.sidebar.number_input('How many bins for the histogram', 5, 500)
+    op = st.sidebar.selectbox('Select the opacity', np.arange(0.6, 1.01, 0.1))
     year = st.sidebar.number_input('Choose the year to start from',
-                             min_value=min_value,
-                             max_value=max_value,)
-    button = st.sidebar.button("Press to see the changes")
+                                   min_value=min_value,
+                                   max_value=max_value)
 
     changed_df = df[df['Last Known Eruption'] > year]
 
-    if button:
-        fig = px.histogram(changed_df,
-                           x='Last Known Eruption',
-                           nbins=bin_input,
-                           color=changed_df['Activity Evidence'],
-                           opacity=0.7)
-        st.plotly_chart(fig)
+    fig = px.histogram(changed_df,
+                       x='Last Known Eruption',
+                       nbins=bin_input,
+                       color=changed_df['Activity Evidence'],
+                       opacity=op)
+    st.plotly_chart(fig)
 
 
 def main():
@@ -79,6 +115,8 @@ def main():
     st.pydeck_chart(map)
 
     histogram(df)
+
+    bar_chart(df)
 
 
 main()
