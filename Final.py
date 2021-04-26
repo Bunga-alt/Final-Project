@@ -3,7 +3,12 @@ Author: Buyanbat Tamir
 Date: 4/29/30
 Data: Volcanoes
 URL: https://share.streamlit.io/bunga-alt/final-project/main/Final.py
-Description: 2 queries and a map using the volcanoes database
+Description:
+
+This program uses the Volcanoes database to create a bar chart, a histogram chart and map on streamlit.
+The map uses the coordinates to mark where the volcanoes are located and show their name and their type.
+The bar chart shows how many volcanoes are in the specific country using a frequency dictionary.
+The histogram shows us how many times a volcano has erupted within a given timeframe.
 
 """
 
@@ -12,7 +17,7 @@ import numpy as np
 import streamlit as st
 import pydeck as pdk
 import plotly.express as px
-
+@st.cache
 #used by the pd.apply to change data in a dataframe
 def eruption(x):
     if 'BCE' in x:
@@ -60,11 +65,12 @@ def bar_chart(df):
     st.plotly_chart(fig)
 
 
-def histogram(df, op = 0.8):
+def histogram(df):
     st.title('Histogram Chart of the Last Known Eruptions')
     min_value = int(df['Last Known Eruption'].min())
     max_value = int(df['Last Known Eruption'].max())
 
+    #Taking user inputs
     st.sidebar.header('Inputs for the Histogram')
     bin_input = st.sidebar.number_input('How many bins for the histogram', 5, 500)
     op = st.sidebar.selectbox('Select the opacity', np.arange(0.6, 1.01, 0.1))
@@ -74,6 +80,7 @@ def histogram(df, op = 0.8):
 
     changed_df = df[df['Last Known Eruption'] > year]
 
+    #Creating the hitogram
     fig = px.histogram(changed_df,
                        x='Last Known Eruption',
                        nbins=bin_input,
@@ -85,7 +92,7 @@ def histogram(df, op = 0.8):
 def main():
 
     df = pd.read_csv('volcanoes.csv')
-    df.drop(['Link','Dominant Rock Type','Tectonic Setting','Region','Subregion'], axis=1, inplace=True)
+    df.drop(['Link', 'Dominant Rock Type', 'Tectonic Setting', 'Region', 'Subregion'], axis=1, inplace=True)
     df = df.rename(columns={'Latitude': 'lat', 'Longitude': 'lon'})
 
     # Modifying the Last Known Eruption column to make it into an integer
